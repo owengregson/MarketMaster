@@ -1,0 +1,16 @@
+[
+{
+  "modid": "ff",
+  "name": "FluxFlips",
+  "description": "FluxFlips",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["LemonFlux"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

@@ -1,0 +1,158 @@
+package me.lemonflux.fluxflips.gui;
+
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiButton;
+import java.io.IOException;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import org.lwjgl.opengl.GL11;
+
+class RoundedRect extends GuiScreen {
+    private int x, y, width, height, radius;
+    private String colorHex;
+
+    public RoundedRect(int x, int y, int width, int height, int radius, String colorHex) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.radius = radius;
+        this.colorHex = colorHex;
+    }
+
+    public void drawRoundedRect() {
+        int color = Integer.parseInt(colorHex.substring(1), 16);
+        float alpha = (float) (color >> 24 & 255) / 255.0F;
+        float red = (float) (color >> 16 & 255) / 255.0F;
+        float green = (float) (color >> 8 & 255) / 255.0F;
+        float blue = (float) (color & 255) / 255.0F;
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glPushMatrix();
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(red, green, blue, alpha);
+
+        // Draw the center
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex2f(x + radius, y);
+        GL11.glVertex2f(x + width - radius, y);
+        GL11.glVertex2f(x + width - radius, y + height);
+        GL11.glVertex2f(x + radius, y + height);
+        GL11.glEnd();
+
+        // Draw the four sides
+        // Top
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex2f(x + radius, y);
+        GL11.glVertex2f(x + width - radius, y);
+        GL11.glVertex2f(x + width - radius, y + radius);
+        GL11.glVertex2f(x + radius, y + radius);
+        GL11.glEnd();
+
+        // Bottom
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex2f(x + radius, y + height - radius);
+        GL11.glVertex2f(x + width - radius, y + height - radius);
+        GL11.glVertex2f(x + width - radius, y + height);
+        GL11.glVertex2f(x + radius, y + height);
+        GL11.glEnd();
+
+        // Left
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex2f(x, y + radius);
+        GL11.glVertex2f(x + radius, y + radius);
+        GL11.glVertex2f(x + radius, y + height - radius);
+        GL11.glVertex2f(x, y + height - radius);
+        GL11.glEnd();
+
+        // Right
+        GL11.glBegin(GL11.GL_QUADS);
+        GL11.glVertex2f(x + width - radius, y + radius);
+        GL11.glVertex2f(x + width, y + radius);
+        GL11.glVertex2f(x + width, y + height - radius);
+        GL11.glVertex2f(x + width - radius, y + height - radius);
+        GL11.glEnd();
+
+        // Draw the rounded corners
+        drawCirclePart(x + radius, y + radius, radius, 180, 270); // Top-left
+        drawCirclePart(x + width - radius, y + radius, radius, 270, 360); // Top-right
+        drawCirclePart(x + width - radius, y + height - radius, radius, 0, 90); // Bottom-right
+        drawCirclePart(x + radius, y + height - radius, radius, 90, 180); // Bottom-left
+
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+    }
+
+    private void drawCirclePart(int cx, int cy, int r, int startAngle, int endAngle) {
+        GL11.glBegin(GL11.GL_TRIANGLE_FAN);
+        GL11.glVertex2f(cx, cy); // Center of circle
+        for (int i = startAngle; i <= endAngle; i++) {
+            double angle = Math.toRadians(i);
+            double x = cx + Math.cos(angle) * r;
+            double y = cy + Math.sin(angle) * r;
+            GL11.glVertex2d(x, y);
+        }
+        GL11.glEnd();
+    }
+}
+
+public class ConfigMenu extends GuiScreen {
+    private GuiButton doneButton;
+
+    public ConfigMenu() {
+        // Constructor
+    }
+
+    @Override
+    public void initGui() {
+        // This method is called when your GUI is opened, use it to add buttons and initialize your GUI.
+        buttonList.clear(); // Clear existing buttons (good practice)
+
+        // Adding a 'Done' button to your GUI
+        doneButton = new GuiButton(0, this.width / 2 - 100, this.height / 2 + 50, "Done");
+        buttonList.add(doneButton);
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton button) throws IOException {
+        // This method is called when a button is clicked.
+        if (button == doneButton) {
+            mc.displayGuiScreen(null); // Closes the GUI when 'Done' is clicked
+        }
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        super.drawScreen(mouseX, mouseY, partialTicks);
+        drawDefaultBackground();
+
+        // Calculate the margins and size
+        int marginWidth = (int) (this.width * 0.3);
+        int marginHeight = (int) (this.height * 0.3);
+        int rectangleWidth = this.width - 2 * marginWidth; // Width with 30% margin from each side
+        int rectangleHeight = this.height - 2 * marginHeight; // Height with 30% margin from each side
+
+        // Calculate the top left corner position
+        int x1 = marginWidth;
+        int y1 = marginHeight;
+        // Calculate the bottom right corner position
+        int x2 = x1 + rectangleWidth;
+        int y2 = y1 + rectangleHeight;
+
+        // Draw the rounded rectangle
+        new RoundedRect(x1, y1, rectangleWidth, rectangleHeight, 10, "#FF0000").drawRoundedRect();
+    }
+
+    @Override
+    public boolean doesGuiPauseGame() {
+        // Return false if you want the background to continue moving while your GUI is open
+        return false;
+    }
+}
